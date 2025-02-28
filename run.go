@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	log "github.com/Sirupsen/logrus"
-	"github.com/xianlubird/mydocker/cgroups"
-	"github.com/xianlubird/mydocker/cgroups/subsystems"
-	"github.com/xianlubird/mydocker/container"
-	"github.com/xianlubird/mydocker/network"
+	"github.com/yarqwq/mydocker/cgroups"
+	"github.com/yarqwq/mydocker/cgroups/subsystems"
+	"github.com/yarqwq/mydocker/container"
+	"github.com/yarqwq/mydocker/network"
 	"math/rand"
 	"os"
 	"strconv"
@@ -54,7 +54,7 @@ func Run(tty bool, comArray []string, res *subsystems.ResourceConfig, containerN
 			Name:        containerName,
 			PortMapping: portmapping,
 		}
-		if err := network.Connect(nw, containerInfo); err != nil {
+		if err := network.Connect(context.Background(), nw, containerInfo); err != nil {
 			log.Errorf("Error Connect Network %v", err)
 			return
 		}
@@ -98,7 +98,7 @@ func recordContainerInfo(containerPID int, commandArray []string, containerName,
 	jsonStr := string(jsonBytes)
 
 	dirUrl := fmt.Sprintf(container.DefaultInfoLocation, containerName)
-	if err := os.MkdirAll(dirUrl, 0622); err != nil {
+	if err := os.MkdirAll(dirUrl, 0755); err != nil {
 		log.Errorf("Mkdir error %s error %v", dirUrl, err)
 		return "", err
 	}
@@ -126,10 +126,10 @@ func deleteContainerInfo(containerId string) {
 
 func randStringBytes(n int) string {
 	letterBytes := "1234567890"
-	rand.Seed(time.Now().UnixNano())
+	var r = rand.New(rand.NewSource(time.Now().UnixNano()))
 	b := make([]byte, n)
 	for i := range b {
-		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+		b[i] = letterBytes[r.Intn(len(letterBytes))]
 	}
 	return string(b)
 }
