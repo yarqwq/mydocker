@@ -1,7 +1,7 @@
 package container
 
 import (
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os"
 	"os/exec"
 	"strings"
