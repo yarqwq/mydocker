@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 	"github.com/vishvananda/netlink"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 	"os/exec"
 )
 
