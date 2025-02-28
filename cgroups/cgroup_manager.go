@@ -1,8 +1,8 @@
 package cgroups
 
 import (
-	"github.com/xianlubird/mydocker/cgroups/subsystems"
-	"github.com/Sirupsen/logrus"
+	"github.com/yarqwq/mydocker/cgroups/subsystems"
+	"github.com/sirupsen/logrus"
 )
 
 type CgroupManager struct {
