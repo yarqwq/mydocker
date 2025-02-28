@@ -6,7 +6,7 @@ import (
 	"path"
 	"strings"
 	"encoding/json"
-	log "github.com/Sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const ipamDefaultAllocatorPath = "/var/run/mydocker/network/ipam/subnet.json"
