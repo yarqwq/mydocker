@@ -56,11 +56,14 @@ func RecordContainerInfo(containerPID int, commandArray []string, containerName,
 }
 
 func DeleteContainerInfo(containerID string) error {
-	dirPath := fmt.Sprintf(InfoLocFormat, containerID)
-	if err := os.RemoveAll(dirPath); err != nil {
-		return errors.WithMessagef(err, "remove dir %s failed", dirPath)
-	}
-	return nil
+    dirPath := fmt.Sprintf(InfoLocFormat, containerID)
+    if _, err := os.Stat(dirPath); os.IsNotExist(err) {
+        return nil // 目录不存在，无需删除
+    }
+    if err := os.RemoveAll(dirPath); err != nil {
+        return errors.WithMessagef(err, "remove dir %s failed", dirPath)
+    }
+    return nil
 }
 
 func GenerateContainerID() string {

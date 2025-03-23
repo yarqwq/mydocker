@@ -68,25 +68,31 @@ func Run(tty bool, comArray, envSlice []string, res *subsystems.ResourceConfig, 
 	sendInitCommand(comArray, writePipe)
 
 	if tty {
+
 		_ = parent.Wait() // 前台运行，等待容器进程结束
+		_ = parent.Process.Kill() // 确保子进程被终止
 	}
 	// 然后创建一个 goroutine 来处理后台运行的清理工作
-	go func() {
-		if !tty {
-			// 等待子进程退出
-			_, _ = parent.Process.Wait()
-		}
 
-		// 清理工作
-		container.DeleteWorkSpace(containerId, volume)
-		container.DeleteContainerInfo(containerId)
-		if net != "" {
-			network.Disconnect(net, containerInfo)
-		}
+defer func(){
+	 if net != "" {
+        network.Disconnect(net, containerInfo)
+    	}
 
-		// 销毁 cgroup
-		cgroupManager.Destroy()
-	}()
+    	// 销毁 cgroup
+    	cgroupManager.Destroy()
+
+    	// 删除容器工作空间
+    	container.DeleteWorkSpace(containerId, volume)
+
+    	// 删除容器信息
+    	container.DeleteContainerInfo(containerId)
+}()
+go func(){
+	if !tty{
+		_ = parent.Wait()
+	}
+}()
 }
 
 // sendInitCommand 通过writePipe将指令发送给子进程
