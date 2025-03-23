@@ -18,81 +18,72 @@ import (
 去初始化容器的一些资源。
 */
 func Run(tty bool, comArray, envSlice []string, res *subsystems.ResourceConfig, volume, containerName, imageName string,
-	net string, portMapping []string) {
-	containerId := container.GenerateContainerID() // 生成 10 位容器 id
+    net string, portMapping []string) {
+    containerId := container.GenerateContainerID()
 
-	// start container
-	parent, writePipe := container.NewParentProcess(tty, volume, containerId, imageName, envSlice)
-	if parent == nil {
-		log.Errorf("New parent process error")
-		return
-	}
-	if err := parent.Start(); err != nil {
-		log.Errorf("Run parent.Start err:%v", err)
-		return
-	}
+    parent, writePipe := container.NewParentProcess(tty, volume, containerId, imageName, envSlice)
+    if parent == nil {
+        log.Errorf("New parent process error")
+        return
+    }
+    if err := parent.Start(); err != nil {
+        log.Errorf("Run parent.Start err:%v", err)
+        return
+    }
 
-	// 创建cgroup manager, 并通过调用set和apply设置资源限制并使限制在容器上生效
-	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
-	//defer cgroupManager.Destroy() // 由单独的 goroutine 来处理
-	_ = cgroupManager.Set(res)
-	_ = cgroupManager.Apply(parent.Process.Pid,res)
+    cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
+    _ = cgroupManager.Set(res)
+    _ = cgroupManager.Apply(parent.Process.Pid, res)
 
-	var containerIP string
-	// 如果指定了网络信息则进行配置
-	if net != "" {
-		// config container network
-		containerInfo := &container.Info{
-			Id:          containerId,
-			Pid:         strconv.Itoa(parent.Process.Pid),
-			Name:        containerName,
-			PortMapping: portMapping,
-		}
-		ip, err := network.Connect(net, containerInfo)
-		if err != nil {
-			log.Errorf("Error Connect Network %v", err)
-			return
-		}
-		containerIP = ip.String()
-	}
+    var containerIP string
+    if net != "" {
+        containerInfo := &container.Info{
+            Id:          containerId,
+            Pid:         strconv.Itoa(parent.Process.Pid),
+Name:        containerName,
+PortMapping: portMapping,
+        }
+        ip, err := network.Connect(net, containerInfo)
+        if err != nil {
+            log.Errorf("Error Connect Network %v", err)
+            return
+        }
+        containerIP = ip.String()
+    }
 
-	// record container info
-	containerInfo, err := container.RecordContainerInfo(parent.Process.Pid, comArray, containerName, containerId,
-		volume, net, containerIP, portMapping)
-	if err != nil {
-		log.Errorf("Record container info error %v", err)
-		return
-	}
+    containerInfo, err := container.RecordContainerInfo(parent.Process.Pid, comArray, containerName, containerId,
+        volume, net, containerIP, portMapping)
+    if err != nil {
+        log.Errorf("Record container info error %v", err)
+        return
+    }
 
-	// 在子进程创建后才能通过pipe来发送参数
-	sendInitCommand(comArray, writePipe)
+    if err := sendInitCommand(comArray, writePipe); err != nil {
+        log.Errorf("Failed to send init command: %v", err)
+        return
+    }
 
-	if tty {
+    // 定义清理函数
+    cleanup := func() {
+        if net != "" {
+            network.Disconnect(net, containerInfo)
+        }
+        cgroupManager.Destroy()
+        container.DeleteWorkSpace(containerId, volume)
+        container.DeleteContainerInfo(containerId)
+    }
 
-		_ = parent.Wait() // 前台运行，等待容器进程结束
-		_ = parent.Process.Kill() // 确保子进程被终止
-	}
-	// 然后创建一个 goroutine 来处理后台运行的清理工作
-
-defer func(){
-	 if net != "" {
-        network.Disconnect(net, containerInfo)
-    	}
-
-    	// 销毁 cgroup
-    	cgroupManager.Destroy()
-
-    	// 删除容器工作空间
-    	container.DeleteWorkSpace(containerId, volume)
-
-    	// 删除容器信息
-    	container.DeleteContainerInfo(containerId)
-}()
-go func(){
-	if !tty{
-		_ = parent.Wait()
-	}
-}()
+    if tty {
+        // 前台模式：同步等待并清理
+        _ = parent.Wait()
+        cleanup()
+    } else {
+        // 后台模式：异步等待并清理
+        go func() {
+            _, _ = parent.Wait()
+            cleanup()
+        }()
+    }
 }
 
 // sendInitCommand 通过writePipe将指令发送给子进程
