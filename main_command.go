@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"mydocker/cgroups/resource"
+	"mydocker/cgroups/subsystems"
 	"mydocker/network"
 	"os"
 
@@ -90,7 +90,7 @@ var runCommand = cli.Command{
 			tty = true
 		}
 		log.Infof("createTty %v", tty)
-		resConf := &resource.ResourceConfig{
+		resConf := &subsystems.ResourceConfig{
 			MemoryLimit: context.String("mem"),
 			CpuSet:      context.String("cpuset"),
 			CpuCfsQuota: context.Int("cpu"),

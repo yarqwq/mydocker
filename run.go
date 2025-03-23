@@ -3,7 +3,7 @@ package main
 import (
 	log "github.com/sirupsen/logrus"
 	"mydocker/cgroups"
-	"mydocker/cgroups/resource"
+	"mydocker/cgroups/subsystems"
 	"mydocker/container"
 	"mydocker/network"
 	"os"
@@ -17,7 +17,7 @@ import (
 进程，然后在子进程中，调用/proc/self/exe,也就是调用自己，发送init参数，调用我们写的init方法，
 去初始化容器的一些资源。
 */
-func Run(tty bool, comArray, envSlice []string, res *resource.ResourceConfig, volume, containerName, imageName string,
+func Run(tty bool, comArray, envSlice []string, res *subsystems.ResourceConfig, volume, containerName, imageName string,
 	net string, portMapping []string) {
 	containerId := container.GenerateContainerID() // 生成 10 位容器 id
 
@@ -36,7 +36,7 @@ func Run(tty bool, comArray, envSlice []string, res *resource.ResourceConfig, vo
 	cgroupManager := cgroups.NewCgroupManager("mydocker-cgroup")
 	//defer cgroupManager.Destroy() // 由单独的 goroutine 来处理
 	_ = cgroupManager.Set(res)
-	_ = cgroupManager.Apply(parent.Process.Pid)
+	_ = cgroupManager.Apply(parent.Process.Pid,res)
 
 	var containerIP string
 	// 如果指定了网络信息则进行配置
