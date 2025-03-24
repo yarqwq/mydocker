@@ -92,4 +92,5 @@ func sendInitCommand(comArray []string, writePipe *os.File) {
 	log.Infof("command all is %s", command)
 	_, _ = writePipe.WriteString(command)
 	_ = writePipe.Close()
+	return nil
 }
