@@ -75,21 +75,28 @@ PortMapping: portMapping,
 
     if tty {
         // 前台模式：同步等待并清理
-         _ = parent.Process.Wait()
+         _,_ = parent.Process.Wait()
         cleanup()
     } else {
         // 后台模式：异步等待并清理
         go func() {
-            _ = parent.Process.Wait()
+            _,_ = parent.Process.Wait()
             cleanup()
         }()
     }
 }
 
 // sendInitCommand 通过writePipe将指令发送给子进程
-func sendInitCommand(comArray []string, writePipe *os.File) {
-	command := strings.Join(comArray, " ")
-	log.Infof("command all is %s", command)
-	_, _ = writePipe.WriteString(command)
-	_ = writePipe.Close()
+func sendInitCommand(comArray []string, writePipe *os.File) error {
+    command := strings.Join(comArray, " ")
+    log.Infof("command all is %s", command)
+    _, err := writePipe.WriteString(command)
+    if err != nil {
+        return err  // 返回错误
+    }
+    err = writePipe.Close()
+    if err != nil {
+        return err  // 返回关闭管道时的错误
+    }
+    return nil  // 没有错误时返回 nil
 }
