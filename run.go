@@ -75,12 +75,12 @@ PortMapping: portMapping,
 
     if tty {
         // 前台模式：同步等待并清理
-        _, _ = parent.Process.Wait()
+         _ = parent.Process.Wait()
         cleanup()
     } else {
         // 后台模式：异步等待并清理
         go func() {
-            _, _ = parent.Process.Wait()
+            _ = parent.Process.Wait()
             cleanup()
         }()
     }
@@ -92,5 +92,4 @@ func sendInitCommand(comArray []string, writePipe *os.File) {
 	log.Infof("command all is %s", command)
 	_, _ = writePipe.WriteString(command)
 	_ = writePipe.Close()
-	return nil
 }
