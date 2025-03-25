@@ -80,14 +80,15 @@ PortMapping: portMapping,
          _,_ = parent.Process.Wait()
 		log.Info("-it parent.Process.Wait done.")
         cleanup()
-    } else {
-        // 后台模式：异步等待并清理
-        go func() {
-            _,_ = parent.Process.Wait()
-			log.Info("-d parent.Process.Wait done.")
-            cleanup()
-        }()
-    }
+		}
+   //  } else {
+   //      // 后台模式：异步等待并清理
+   //      go func() {
+   //          _,_ = parent.Process.Wait()
+			// log.Info("-d parent.Process.Wait done.")
+   //          cleanup()
+   //      }()
+   //  }
 }
 
 // sendInitCommand 通过writePipe将指令发送给子进程
