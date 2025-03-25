@@ -86,6 +86,8 @@ PortMapping: portMapping,
 
 		// 清理工作
 		cleanup()
+		}()
+
   //   if tty {
   //       // 前台模式：同步等待并清理
   //        _,_ = parent.Process.Wait()
