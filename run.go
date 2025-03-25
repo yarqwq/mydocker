@@ -63,15 +63,17 @@ PortMapping: portMapping,
         return
     }
 
-    // 定义清理函数
-    cleanup := func() {
-        if net != "" {
-            network.Disconnect(net, containerInfo)
-        }
-        cgroupManager.Destroy()
-        container.DeleteWorkSpace(containerId, volume)
-        container.DeleteContainerInfo(containerId)
+    // 定义清理
+	cleanup := func() {
+    log.Info("Starting cleanup...")
+    if net != "" {
+        network.Disconnect(net, containerInfo)
     }
+    cgroupManager.Destroy()
+    container.DeleteWorkSpace(containerId, volume)
+    container.DeleteContainerInfo(containerId)
+    log.Info("Cleanup complete.")
+}
 
     if tty {
         // 前台模式：同步等待并清理
