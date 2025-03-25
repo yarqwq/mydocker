@@ -78,11 +78,13 @@ PortMapping: portMapping,
     if tty {
         // 前台模式：同步等待并清理
          _,_ = parent.Process.Wait()
+		log.Info("-it parent.Process.Wait done.")
         cleanup()
     } else {
         // 后台模式：异步等待并清理
         go func() {
             _,_ = parent.Process.Wait()
+			log.Info("-d parent.Process.Wait done.")
             cleanup()
         }()
     }
