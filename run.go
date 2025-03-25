@@ -74,13 +74,24 @@ PortMapping: portMapping,
     container.DeleteContainerInfo(containerId)
     log.Info("Cleanup complete.")
 }
-
-    if tty {
-        // 前台模式：同步等待并清理
-         _,_ = parent.Process.Wait()
-		log.Info("-it parent.Process.Wait done.")
-        cleanup()
+	if tty {
+		_ = parent.Wait() // 前台运行，等待容器进程结束
+	}
+	// 然后创建一个 goroutine 来处理后台运行的清理工作
+	go func() {
+		if !tty {
+			// 等待子进程退出
+			_, _ = parent.Process.Wait()
 		}
+
+		// 清理工作
+		cleanup()
+  //   if tty {
+  //       // 前台模式：同步等待并清理
+  //        _,_ = parent.Process.Wait()
+		// log.Info("-it parent.Process.Wait done.")
+  //       cleanup()
+		// }
    //  } else {
    //      // 后台模式：异步等待并清理
    //      go func() {
