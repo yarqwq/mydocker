@@ -6,6 +6,7 @@
 > 再次感谢几位作者大佬
 
 具体差异如下：
+完善生命周期逻辑
 
 * UnionFS替换：从AUFS 替换为 Overlayfs
 * 依赖管理更新：从 go vendor 替换为 Go Module
